@@ -11,9 +11,9 @@ permissions:
   contents: read
 
 jobs:
-  test-v6:
+  research-v6:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 180
 
     steps:
       - name: Checkout
@@ -24,8 +24,6 @@ jobs:
           rm -rf v6
           mkdir -p v6
           unzip -q "monex_jp_auto_trader_v6_cloud 2.zip" -d v6
-          echo "=== V6 files ==="
-          find v6 -maxdepth 4 -type f | sort
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -44,9 +42,34 @@ jobs:
         run: |
           pytest -q
 
-      - name: Safety check
+      - name: Run 60-day 5-minute research
+        working-directory: "v6/monex_jp_auto_trader_v6_cloud 2"
         run: |
-          echo "V6 TEST COMPLETED"
+          python scripts/run_60d_learning.py \
+            --interval 5m \
+            --period 60d \
+            --batch-size 20 \
+            --symbol-chunk 100 \
+            --shares 100 \
+            --target 1000 \
+            --slippage 1
+
+      - name: Upload research results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: monex-v6-60d-results
+          path: |
+            v6/monex_jp_auto_trader_v6_cloud 2/outputs/summary.json
+            v6/monex_jp_auto_trader_v6_cloud 2/outputs/RESULT_JP.md
+            v6/monex_jp_auto_trader_v6_cloud 2/outputs/strict100_candidates.csv
+            v6/monex_jp_auto_trader_v6_cloud 2/outputs/download_report.csv
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Safety check
+        if: always()
+        run: |
           echo "LIVE TRADING: DISABLED"
           echo "MONEX CREDENTIALS: NOT USED"
           echo "REAL ORDERS: NOT SENT"
