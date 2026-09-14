@@ -1,0 +1,76 @@
+name: V8 Multi Threshold Research
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/v8.yml"
+      - "v8/run.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v8-multi-threshold
+  cancel-in-progress: false
+
+jobs:
+  research-v8:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas numpy yfinance requests beautifulsoup4 openpyxl
+
+      - name: Self test
+        run: python v8/run.py --self-test
+
+      - name: Run V8 research
+        run: |
+          python v8/run.py \
+            --interval 5m \
+            --period 60d \
+            --batch-size 20 \
+            --symbol-chunk 100 \
+            --shares 100 \
+            --target 1000 \
+            --slippage 1
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: monex-v8-results
+          path: |
+            outputs/summary_v8.json
+            outputs/RESULT_V8_JP.md
+            outputs/candidates_100.csv
+            outputs/candidates_99.csv
+            outputs/candidates_98.csv
+            outputs/candidates_95.csv
+            outputs/candidates_all.csv
+            outputs/shortlist.csv
+            outputs/download_report.csv
+            outputs/tse_symbols.csv
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Safety check
+        if: always()
+        run: |
+          echo "LIVE TRADING: DISABLED"
+          echo "MONEX CREDENTIALS: NOT USED"
+          echo "REAL ORDERS: NOT SENT"
