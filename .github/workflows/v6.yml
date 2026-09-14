@@ -1,0 +1,50 @@
+name: V6 Research
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/v6.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-v6:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract V6
+        run: |
+          mkdir -p v6
+          unzip -q "monex_jp_auto_trader_v6_cloud 2.zip" -d v6
+          echo "=== Extracted files ==="
+          find v6 -maxdepth 3 -type f | sort
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install V6
+        working-directory: v6
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Run tests
+        working-directory: v6
+        run: |
+          pytest -q
+
+      - name: Safety check
+        run: |
+          echo "V6 TEST COMPLETED"
+          echo "LIVE TRADING: DISABLED"
+          echo "MONEX CREDENTIALS: NOT USED"
+          echo "REAL ORDERS: NOT SENT"
