@@ -1,0 +1,71 @@
+name: V9 Fee Safe Research
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/v9.yml"
+      - "v9/run.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v9-fee-safe-research
+  cancel-in-progress: false
+
+jobs:
+  research-v9:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas numpy yfinance requests beautifulsoup4 openpyxl
+
+      - name: Self test
+        run: python v9/run.py --self-test
+
+      - name: Run V9 fee-safe research
+        run: |
+          python v9/run.py \
+            --interval 5m \
+            --period 60d \
+            --batch-size 20 \
+            --symbol-chunk 100 \
+            --shares 100 \
+            --slippage 1
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: monex-v9-fee-safe-results
+          path: |
+            outputs_v9/summary_v9.json
+            outputs_v9/RESULT_V9_JP.md
+            outputs_v9/fee_safe_candidates.csv
+            outputs_v9/shortlist.csv
+            outputs_v9/download_report.csv
+            outputs_v9/tse_symbols.csv
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Safety check
+        if: always()
+        run: |
+          echo "LIVE TRADING: DISABLED"
+          echo "MONEX CREDENTIALS: NOT USED"
+          echo "REAL ORDERS: NOT SENT"
