@@ -1,6 +1,11 @@
 name: V7 Fast Research
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/v7-fast.yml"
+      - "v7/run.py"
   workflow_dispatch:
 
 permissions:
