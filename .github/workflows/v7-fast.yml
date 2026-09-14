@@ -1,0 +1,66 @@
+name: V7 Fast Research
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v7-fast-research
+  cancel-in-progress: false
+
+jobs:
+  research-v7:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas numpy yfinance requests beautifulsoup4 openpyxl
+
+      - name: Self test
+        run: python v7/run.py --self-test
+
+      - name: Run fast 60-day 5-minute research
+        run: |
+          python v7/run.py \
+            --interval 5m \
+            --period 60d \
+            --batch-size 20 \
+            --symbol-chunk 100 \
+            --shares 100 \
+            --target 1000 \
+            --slippage 1
+
+      - name: Upload research results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: monex-v7-60d-results
+          path: |
+            outputs/summary.json
+            outputs/RESULT_JP.md
+            outputs/strict100_candidates.csv
+            outputs/download_report.csv
+            outputs/tse_symbols.csv
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Safety check
+        if: always()
+        run: |
+          echo "LIVE TRADING: DISABLED"
+          echo "MONEX CREDENTIALS: NOT USED"
+          echo "REAL ORDERS: NOT SENT"
