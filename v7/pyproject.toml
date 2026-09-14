@@ -1,0 +1,16 @@
+[project]
+name = "monex-jp-auto-trader-v7-research"
+version = "0.7.0"
+requires-python = ">=3.11"
+dependencies = [
+  "pandas>=2.2",
+  "numpy>=1.26",
+  "yfinance>=0.2.65",
+  "requests>=2.32",
+  "beautifulsoup4>=4.12",
+  "openpyxl>=3.1",
+  "pyarrow>=17.0"
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
