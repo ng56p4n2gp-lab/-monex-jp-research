@@ -37,6 +37,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e .
+          pip install pytest
 
       - name: Run tests
         working-directory: "v6/monex_jp_auto_trader_v6_cloud 2"
