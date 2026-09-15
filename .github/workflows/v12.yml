@@ -1,0 +1,39 @@
+name: V12 Sub200k Signal Refinement
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'v12/**'
+      - '.github/workflows/v12.yml'
+jobs:
+  research-v12:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install pandas numpy yfinance openpyxl tabulate requests
+      - name: Run V12 refinement
+        run: python v12/run.py
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: monex-v12-sub200k-results
+          path: results_v12/
+          retention-days: 7
+      - name: Safety check
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('results_v12/summary.json')
+          assert p.exists()
+          s=json.loads(p.read_text())
+          assert s['live_trading_enabled'] is False
+          assert s['fees_included'] is False and s['tax_included'] is False
+          assert s['max_position_yen'] == 200000
+          print('safety ok')
+          PY
