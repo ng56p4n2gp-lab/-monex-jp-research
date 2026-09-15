@@ -1,0 +1,26 @@
+name: V13 Predictive Learning
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'v13/**'
+      - '.github/workflows/v13.yml'
+jobs:
+  learn:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pandas numpy yfinance requests lxml html5lib beautifulsoup4 tabulate
+      - run: python v13/run.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monex-v13-predictive-learning
+          path: results_v13/
+          if-no-files-found: warn
