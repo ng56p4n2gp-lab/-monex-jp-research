@@ -16,7 +16,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install pandas numpy yfinance requests lxml html5lib beautifulsoup4 tabulate
+      - run: pip install pandas numpy yfinance requests lxml html5lib beautifulsoup4 tabulate openpyxl
       - run: python v13/run.py
       - uses: actions/upload-artifact@v4
         if: always()
