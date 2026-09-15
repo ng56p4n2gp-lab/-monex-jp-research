@@ -18,6 +18,7 @@ jobs:
           python-version: '3.11'
       - run: pip install pandas numpy yfinance requests lxml html5lib beautifulsoup4 tabulate openpyxl
       - run: python v13/run.py
+      - run: python v13/full_validation.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
