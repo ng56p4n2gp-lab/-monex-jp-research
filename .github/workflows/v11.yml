@@ -1,0 +1,39 @@
+name: V11 Five Strategy Research
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'v11/**'
+      - '.github/workflows/v11.yml'
+jobs:
+  research-v11:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install pandas numpy yfinance openpyxl tabulate requests
+      - name: Run five-strategy research
+        run: python v11/run.py
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: monex-v11-five-strategy-results
+          path: results_v11/
+          retention-days: 7
+      - name: Safety check
+        run: |
+          test -f results_v11/summary.json
+          python - <<'PY'
+          import json
+          s=json.load(open('results_v11/summary.json'))
+          assert s['live_trading_enabled'] is False
+          assert s['fees_included'] is False
+          assert s['tax_included'] is False
+          PY
